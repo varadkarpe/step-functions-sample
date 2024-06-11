@@ -1,0 +1,137 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Deploys the following resources: 
+    - 2 Lambda functions
+    - 1 S3 bucket
+    - 1 DynamoDB table
+
+Resources:
+  SampleDataPipelineMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/copier_upserter.asl.json
+      DefinitionSubstitutions:
+        CopierFunctionArn: !GetAtt CopierFunction.Arn
+        ItemProcessorFunctionArn: !GetAtt ItemProcessorFunction.Arn
+        DDBUpsertQueueUrl: !GetAtt DDBUpsertItemQueue.QueueUrl
+        DDBUpsertQueueArn: !GetAtt DDBUpsertItemQueue.Arn
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref CopierFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ItemProcessorFunction
+        - DynamoDBWritePolicy:
+            TableName: !Ref DataStoreTable
+        - SQSPollerPolicy:
+            QueueName: !Ref DDBUpsertItemQueue
+
+  WorkBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: general-work-bucket-varad.karpe
+
+  DataStoreTable: 
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: N
+      KeySchema: 
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+  
+  DDBUpsertItemQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 10
+      MessageRetentionPeriod: 600
+      VisibilityTimeout: 200
+    
+  CopierFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/copier/
+      Handler: dist/index.handler
+      Runtime: nodejs20.x
+      MemorySize: 128
+      Timeout: 10
+      Environment: 
+        Variables: 
+          SOURCE_BUCKET_NAME: general-purpose-bucket-varad.karpe
+          REGION_VAL: ap-northeast-1
+          WORK_BUCKET_NAME: !Ref WorkBucket
+          FILE_KEY: Tuition_Assistance_20240525.csv
+      Policies: 
+        - S3ReadPolicy:
+            BucketName: general-purpose-bucket-varad.karpe
+        - S3WritePolicy: 
+            BucketName: !Ref WorkBucket
+    
+  ItemProcessorFunction: 
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/item-processor/
+      Handler: dist/index.handler
+      Runtime: nodejs20.x
+      MemorySize: 256
+      Timeout: 600
+      Environment:
+        Variables: 
+          WORK_BUCKET_NAME: !Ref WorkBucket
+          FILE_KEY: Tuition_Assistance_20240525.csv
+          REGION_VAL: ap-northeast-1
+          QUEUE_URL: !GetAtt DDBUpsertItemQueue.QueueUrl
+          NODE_ENV: 'production'
+      Policies:
+        - S3ReadPolicy: 
+            BucketName: !Ref WorkBucket
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt DDBUpsertItemQueue.QueueName
+
+  UpserterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/upserter/
+      Handler: dist/index.handler
+      Runtime: nodejs20.x
+      MemorySize: 128
+      Timeout: 180
+      ReservedConcurrentExecutions: 1
+      Environment:
+        Variables:
+          REGION_VAL: ap-northeast-1
+          DDB_TABLE_NAME: !Ref DataStoreTable
+          QUEUE_URL: !GetAtt DDBUpsertItemQueue.QueueUrl
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref DataStoreTable
+        - SQSPollerPolicy:
+            QueueName: !Ref DDBUpsertItemQueue
+      Events:
+        MySQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt DDBUpsertItemQueue.Arn
+      
+
+Outputs:
+  SampleDataPipelineMachine:
+    Description: "State Machine to orchestrate pipeline execution"
+    Value: !GetAtt SampleDataPipelineMachine.Arn
+  DataStoreTable:
+    Description: "DynamoDB Table"
+    Value: !GetAtt DataStoreTable.Arn
+  DDBUpsertItemQueue:
+    Description: "Queue which triggers item upsert"
+    Value: !GetAtt DDBUpsertItemQueue.Arn
+  CopierFunction:
+    Description: "Copier Lambda function ARN"
+    Value: !GetAtt CopierFunction.Arn
+  ItemProcessorFunction:
+    Description: "Processes CSV file"
+    Value: !GetAtt ItemProcessorFunction.Arn
+  UpserterFunction:
+    Description: "DynamoDB upserter function ARN"
+    Value: !GetAtt UpserterFunction.Arn

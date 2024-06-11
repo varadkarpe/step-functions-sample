@@ -1,0 +1,36 @@
+{
+    "Comment": "A state machine which orchestrates copying and loading contents of a csv file.",
+    "StartAt": "CopyFileTask",
+    "States": {
+        "CopyFileTask": {
+            "Type": "Task",
+            "Resource": "${CopierFunctionArn}",
+            "Retry": [
+                {
+                    "ErrorEquals": [
+                        "States.TaskFailed"
+                    ],
+                    "IntervalSeconds": 15,
+                    "MaxAttempts": 1, 
+                    "BackoffRate": 1.5
+                }
+            ],
+            "Next": "ItemProcessorTask"
+        },
+        "ItemProcessorTask": {
+            "Type": "Task",
+            "Resource": "${ItemProcessorFunctionArn}",
+            "Retry": [
+                {
+                    "ErrorEquals": [
+                        "States.TaskFailed"
+                    ],
+                    "IntervalSeconds": 15,
+                    "MaxAttempts": 1, 
+                    "BackoffRate": 1.5
+                }
+            ],
+            "End": true
+        }
+    }
+}

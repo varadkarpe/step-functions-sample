@@ -1,0 +1,4 @@
+packages:
+- 'src/copier/*'
+- 'src/upserter/*'
+- 'src/item-processor/*'
