@@ -8,6 +8,75 @@ importers:
 
   .: {}
 
+  lambda/copier:
+    dependencies:
+      '@aws-sdk/client-s3':
+        specifier: ^3.591.0
+        version: 3.591.0
+    devDependencies:
+      '@types/aws-lambda':
+        specifier: ^8.10.138
+        version: 8.10.138
+      '@types/node':
+        specifier: ^20.14.2
+        version: 20.14.2
+      ts-node:
+        specifier: ^10.9.2
+        version: 10.9.2(@types/node@20.14.2)(typescript@5.4.5)
+      typescript:
+        specifier: ^5.4.5
+        version: 5.4.5
+
+  lambda/item-processor:
+    dependencies:
+      '@aws-sdk/client-s3':
+        specifier: ^3.591.0
+        version: 3.591.0
+      '@aws-sdk/client-sqs':
+        specifier: ^3.592.0
+        version: 3.592.0
+      csv-parse:
+        specifier: ^5.5.6
+        version: 5.5.6
+    devDependencies:
+      '@types/aws-lambda':
+        specifier: ^8.10.138
+        version: 8.10.138
+      '@types/node':
+        specifier: ^20.14.2
+        version: 20.14.2
+      ts-node:
+        specifier: ^10.9.2
+        version: 10.9.2(@types/node@20.14.2)(typescript@5.4.5)
+      typescript:
+        specifier: ^5.4.5
+        version: 5.4.5
+
+  lambda/upserter:
+    dependencies:
+      '@aws-sdk/client-dynamodb':
+        specifier: ^3.592.0
+        version: 3.592.0
+      '@aws-sdk/client-lambda':
+        specifier: ^3.592.0
+        version: 3.592.0
+      '@aws-sdk/lib-dynamodb':
+        specifier: ^3.592.0
+        version: 3.592.0(@aws-sdk/client-dynamodb@3.592.0)
+      '@types/aws-lambda':
+        specifier: ^8.10.138
+        version: 8.10.138
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.2
+        version: 20.14.2
+      ts-node:
+        specifier: ^10.9.2
+        version: 10.9.2(@types/node@20.14.2)(typescript@5.4.5)
+      typescript:
+        specifier: ^5.4.5
+        version: 5.4.5
+
   src/copier:
     dependencies:
       '@aws-sdk/client-s3':

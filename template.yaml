@@ -52,7 +52,7 @@ Resources:
   CopierFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/copier/
+      CodeUri: lambda/copier/
       Handler: dist/index.handler
       Runtime: nodejs20.x
       MemorySize: 128
@@ -72,7 +72,7 @@ Resources:
   ItemProcessorFunction: 
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/item-processor/
+      CodeUri: lambda/item-processor/
       Handler: dist/index.handler
       Runtime: nodejs20.x
       MemorySize: 256
@@ -93,7 +93,7 @@ Resources:
   UpserterFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/upserter/
+      CodeUri: lambda/upserter/
       Handler: dist/index.handler
       Runtime: nodejs20.x
       MemorySize: 128

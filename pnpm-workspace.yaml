@@ -1,4 +1,4 @@
 packages:
-- 'src/copier/*'
-- 'src/upserter/*'
-- 'src/item-processor/*'
+- 'lambda/copier/*'
+- 'lambda/upserter/*'
+- 'lambda/item-processor/*'
